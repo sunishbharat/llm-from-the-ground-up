@@ -49,5 +49,4 @@ class transformer_block(nn.Module):
         return x
 
 
-tf = transformer_block(cfg=config.GPT_CONFIG_124M)
-tf([1,3,4])
+#tf = transformer_block(cfg=config.GPT_CONFIG_124M)

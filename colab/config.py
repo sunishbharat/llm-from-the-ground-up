@@ -3,11 +3,13 @@
 #
 
 GPT_CONFIG_124M = {
-    "num_heads"   : 2,
+    "vocab_size"  : 50257,
+    "context_len" : 7,#1024,
     "embd_dim"    : 768,
-    "context_len" : 1024,
+    "num_heads"   : 12,
+    "num_layers"  : 12,
     "dropout_rate": 0.,
-    "qkv_bias"    : False
+    "qkv_bias"    : False,
 }
 
 
