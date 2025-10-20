@@ -1,7 +1,92 @@
 
 import torch
+import os
+import torch
+import urllib.request
+import re
+import tiktoken
 import torch.nn as nn
 import torch.nn.functional as F
+#import config
+
+GPT_CONFIG_124M = {
+    "vocab_size"  : 50257,
+    "context_len" : 256,
+    "embd_dim"    : 768,
+    "num_heads"   : 12,
+    "num_layers"  : 12,
+    "dropout_rate": 0.,
+    "qkv_bias"    : False,
+}
+
+######################################
+# generate_text function
+#
+######################################
+def generate_text(model, idx, num_samples, ctx_len):
+  for _ in range(num_samples):
+      idx_curr = idx[:,-ctx_len:]
+      with torch.no_grad():
+          logits= model(idx_curr)
+      #print(f"{logits.shape}")
+      idx_pred = logits[:,-1,:]
+      #Extract the position index of the largest logits
+      pred_tok = torch.argmax(idx_pred, dim=-1, keepdim=True)
+      
+      #print(tokenizer.decode(idx.squeeze(0).tolist()))
+      idx= torch.cat((idx,pred_tok),dim=1)
+      
+  return idx
+
+# GPT tokenizer class
+from torch.utils.data import Dataset, DataLoader
+
+class GPTTokenizer(Dataset):
+  def __init__(self,input, context_len, stride):
+    self.x = []
+    self.y = []
+
+    self.tokenizer = tiktoken.get_encoding("gpt2")
+    tokens = self.tokenizer.encode(input)
+
+    for i in range(0, len(tokens)- context_len, stride):
+      indata = tokens[i:i+context_len]
+      target = tokens[i+1:i+context_len+1]
+      self.x.append(torch.tensor(indata))
+      self.y.append(torch.tensor(target))
+
+  def __len__(self):
+    return len(self.x)
+
+  def __getitem__(self, idx):
+    return self.x[idx], self.y[idx]
+
+  def decode(self,tk_ids):
+    return self.tokenizer.decode([id.tolist() for id in tk_ids])
+
+
+##################################################################################
+#
+# GPT Dataloader Class
+##################################################################################
+def create_loader(input_txt, batch_size,
+                  context_len, stride, shuffle,
+                  drop_last=True, num_workers=0):
+
+  dataset = GPTTokenizer(input_txt, context_len, stride)
+
+  print(f"{batch_size=},{context_len=}, {stride=},{shuffle=},  {num_workers=}" )
+
+
+
+  dataloader = DataLoader(dataset, batch_size=batch_size,
+                          shuffle=shuffle,
+                          drop_last=drop_last,
+                          num_workers=num_workers)
+  return dataloader,dataset
+  
+
+
 
 
 
@@ -149,4 +234,78 @@ class LayerNormalization(nn.Module):
     self.var    = x.var(dim=-1, keepdim=True, unbiased=False)
     self.x_norm = (x - self.mean)/torch.sqrt(self.var + self.eps)
     return self.scale * self.x_norm + self.shift
+
+
+######################################
+# GPTModel class
+#
+######################################
+class GPTModel(nn.Module):
+    def __init__(self, cfg=GPT_CONFIG_124M):
+        super().__init__()
+        self.tok_emb = nn.Embedding(cfg["vocab_size"], cfg["embd_dim"])
+        self.pos_emb = nn.Embedding(cfg["context_len"], cfg["embd_dim"])
+        self.drop    = nn.Dropout(cfg["dropout_rate"])
+        
+        #Create Transformer blocks
+        self.transf_blk = nn.Sequential(
+           *[transformer_block(cfg) for _ in range(cfg["num_layers"])]
+        )
+        
+        #Create Layernormalisation layer
+        self.layer_norm = LayerNormalization(cfg["embd_dim"])
+        
+        #Create final output layer
+        self.out = nn.Linear(cfg["embd_dim"], cfg["vocab_size"], bias=False)
+        
+    def forward(self,x):
+        batch_size, seq_len = x.shape
+        #print(f"{batch_size=},{seq_len=}")
+        tok_embds = self.tok_emb(x)
+        pos_embds = self.pos_emb(torch.arange(seq_len,device=x.device))
+        x = tok_embds + pos_embds
+        x = self.drop(x)
+        x = self.transf_blk(x)
+        x = self.layer_norm(x)
+        logits = self.out(x)
+        return logits
+
+
+######################################
+# Transformer_block class
+#
+######################################
+class transformer_block(nn.Module):
+    def __init__(self, cfg=GPT_CONFIG_124M):
+        super().__init__()
+        self.layernorm_1 = LayerNormalization(cfg["embd_dim"])
+        self.layernorm_2 = LayerNormalization(cfg["embd_dim"])
+        self.multihead_attn = MultiHeadCasualFast(
+            d_in=cfg["embd_dim"],
+            d_out=cfg["embd_dim"],
+            context_len=cfg["context_len"],
+            dropout=cfg["dropout_rate"],
+            num_heads=cfg["num_heads"],
+            bias=cfg["qkv_bias"]
+        )
+        self.shortcut_conn = ShortcutConnections(cfg["embd_dim"])
+        self.feedforward = Feedforward(cfg["embd_dim"])
+        self.dropout = nn.Dropout(cfg["dropout_rate"])
+        
+    def forward(self, x):
+        #First layer of tf
+        self.input = x
+        x = self.layernorm_1(x)
+        x = self.multihead_attn(x)
+        x = self.dropout(x)
+        x = x + self.input 
+        
+        #Second layer of Tf
+        self.input = x 
+        x = self.layernorm_2(x)
+        x = self.feedforward(x)
+        x = self.dropout(x)
+        x = x + self.input
+        
+        return x
 

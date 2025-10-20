@@ -25,13 +25,9 @@ class GPTModel(nn.Module):
         #Create final output layer
         self.out = nn.Linear(cfg["embd_dim"], cfg["vocab_size"], bias=False)
         
-    def forward1(self,x):
-        batch_size, seq_len = x.shape
-        print(f"{batch_size=},{seq_len=}")
-
     def forward(self,x):
         batch_size, seq_len = x.shape
-        print(f"{batch_size=},{seq_len=}")
+        #print(f"{batch_size=},{seq_len=}")
         tok_embds = self.tok_emb(x)
         pos_embds = self.pos_emb(torch.arange(seq_len,device=x.device))
         x = tok_embds + pos_embds
