@@ -9,8 +9,8 @@ def decode_text(model, idx, num_samples, ctx_len):
         idx_curr = idx[:,-ctx_len:]
         with torch.no_grad():
             logits= model(idx_curr)
-        #print(f"{logits.shape}")
         idx_pred = logits[:,-1,:]
+        #Extract the position index of the largest logits
         pred_tok = torch.argmax(idx_pred, dim=-1, keepdim=True)
         
         print(tokenizer.decode(idx.squeeze(0).tolist()))
@@ -30,10 +30,14 @@ enc = tokenizer.encode(sample_txt)
 enc_tensor = torch.tensor(enc).unsqueeze(0)
 print(f"{enc_tensor.shape=}")
 
+context_len = 1024 
+# Adjust the context lenght based on the experiment
+context_len = context_len if enc_tensor.shape[-1] > context_len else enc_tensor.shape[-1]
+config.GPT_CONFIG_124M["context_len"] = context_len
 model = GPTModel(cfg=config.GPT_CONFIG_124M)
 
-# To Fix: context len is hardcoded to 7, seems its not working if this is different from cfd.["context_len"]
-outt = decode_text(model,enc_tensor,20,7)
+# Context length is defined above.
+outt = decode_text(model,enc_tensor,20,context_len)
 lst = outt.squeeze(0).tolist()
 #print(f"{lst=}")
 #print(tokenizer.decode(lst))
