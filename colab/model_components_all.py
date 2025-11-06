@@ -207,15 +207,15 @@ class MultiHeadCasualFast(nn.Module):
     # Create context vector for output = norm_qk * values
     self.context_vec = (self.attn_wts_qk_norm @ self.values).transpose(-2,-1)
 
-    #print(f"{type(b)=}")
+    #print(f"{self.context_vec.shape=}")
     #print(f"{self.context_len=}")
+    #print(f"{self.d_out=}")
     #print(f"{self.context_vec.shape=}")
 
     # Concatenate the Z or context vecs.
-    self.context_vec = self.context_vec.contiguous().view(b, self.context_len, self.d_out)
+    self.context_vec = self.context_vec.contiguous().view(b, n_tokens, self.d_out)
 
     return self.context_vec
-    #return self.keys
 
 
 ######################################

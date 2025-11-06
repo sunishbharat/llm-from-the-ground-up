@@ -1,43 +1,66 @@
+import tiktoken
+import torch
+import torch.nn as nn
+from torch.utils.data import Dataset, DataLoader
 
 from GPTModel import GPTModel
-import torch
-import tiktoken
 import config
 
-def decode_text(model, idx, num_samples, ctx_len):
-    for _ in range(num_samples):
-        idx_curr = idx[:,-ctx_len:]
-        with torch.no_grad():
-            logits= model(idx_curr)
-        idx_pred = logits[:,-1,:]
-        #Extract the position index of the largest logits
-        pred_tok = torch.argmax(idx_pred, dim=-1, keepdim=True)
-        
-        print(tokenizer.decode(idx.squeeze(0).tolist()))
-        idx= torch.cat((idx,pred_tok),dim=1)
-        
-    return idx
+if __name__ == "__main__":
 
-# Test code
-#torch.manual_seed(123)
-txt1 = "This is the first test sentence."
-txt2 = "Every sentence has an ending word."
-
-tokenizer = tiktoken.get_encoding("gpt2")
+    GPT_CONFIG_124M = {
+        "vocab_size"  : 50257,
+        "context_len" : 256,
+        "embd_dim"    : 768,
+        "num_heads"   : 12,
+        "num_layers"  : 12,
+        "dropout_rate": 0.,
+        "qkv_bias"    : False,
+    }
     
-sample_txt = "Hello I am a good boy from "
-enc = tokenizer.encode(sample_txt)
-enc_tensor = torch.tensor(enc).unsqueeze(0)
-print(f"{enc_tensor.shape=}")
 
-context_len = 1024 
-# Adjust the context lenght based on the experiment
-context_len = context_len if enc_tensor.shape[-1] > context_len else enc_tensor.shape[-1]
-config.GPT_CONFIG_124M["context_len"] = context_len
-model = GPTModel(cfg=config.GPT_CONFIG_124M)
+  ################################################################################ 
+  # decode_text
+  # 
+  #
+  ################################################################################ 
+    def decode_text(model, idx, num_samples, ctx_len):
+        for _ in range(num_samples):
+            idx_curr = idx[:,-ctx_len:]
+            with torch.no_grad():
+                logits= model(idx_curr)
+            idx_pred = logits[:,-1,:]
+            #Extract the position index of the largest logits
+            pred_tok = torch.argmax(idx_pred, dim=-1, keepdim=True)
+            
+            print(tokenizer.decode(idx.squeeze(0).tolist()))
+            idx= torch.cat((idx,pred_tok),dim=1)
+            
+        return idx
 
-# Context length is defined above.
-outt = decode_text(model,enc_tensor,20,context_len)
-lst = outt.squeeze(0).tolist()
-#print(f"{lst=}")
-#print(tokenizer.decode(lst))
+  ################################################################################ 
+  # main 
+  # 
+  #
+  ################################################################################ 
+
+
+    torch.manual_seed(123)
+    model = GPTModel(cfg=GPT_CONFIG_124M)
+    model.eval()  # disable dropout
+
+    start_context = "Hello, I am"
+
+    tokenizer = tiktoken.get_encoding("gpt2")
+    encoded = tokenizer.encode(start_context)
+    encoded_tensor = torch.tensor(encoded).unsqueeze(0)
+
+    print(f"\n{50*'='}\n{22*' '}IN\n{50*'='}")
+    print("\nInput text:", start_context)
+    print("Encoded input text:", encoded)
+    print("encoded_tensor.shape:", encoded_tensor.shape)
+
+
+    context_len = GPT_CONFIG_124M["context_len"]
+    outt = decode_text(model,encoded_tensor,50,context_len)
+    lst = outt.squeeze(0).tolist()
