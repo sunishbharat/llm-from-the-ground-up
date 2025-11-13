@@ -1,4 +1,4 @@
-## 🙏 Acknowledgment
+## Acknowledgment
 This project was inspired by [Sebastian Raschka](https://sebastianraschka.com) and his book *“Build a Large Language Model (From Scratch)”*, which provided the foundational guidance for this implementation.
 
 ## Table of Contents
