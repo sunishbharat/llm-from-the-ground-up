@@ -12,7 +12,7 @@ This project was inspired by [Sebastian Raschka](https://sebastianraschka.com) a
 # Motivation
 This project was created as a personal learning journey to understand how Large Language Models (LLMs) are built from the ground up.
 Inspired by Sebastian Raschka’s book “Build a Large Language Model (From Scratch)”, it re-implements the key concepts and architecture of GPT-2, following a step-by-step, hands-on approach.
-Each module is designed to deepen understanding of transformer components, such as tokenization, attention, and training loops — making it a practical guide for anyone who wants to learn how LLMs work internally.
+Each module is designed to deepen understanding of transformer components, such as tokenization, attention, and training loops, making it a practical guide for anyone who wants to learn how LLMs work internally.
 
 ## Project Goals:
 Each module could be executed on its own to understand how it works and check its output for better understanding.
@@ -50,6 +50,7 @@ Main script to execute for Inference and training.
  - Display the training loss wrt to batches processed.
  - Performs the inference based on the training loops, tweak the epochs to see improvement in performance.
  - Hyperparameters are set in config file.
+
 ## License
 (Suggested by ChatGpt:)  
 This project is licensed under the [MIT License](LICENSE).  
