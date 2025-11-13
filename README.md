@@ -3,7 +3,6 @@
 - [Project Goals](#Project_Goals)
 - [Installation](#installation)
 - [Usage](#Usage)
-- [Contributing](#contributing)
 - [License](#license)
 
 
@@ -45,3 +44,7 @@ To run in Google colab, Main script to execute for Inference and training.
  - Display the training loss wrt to batches processed.
  - Performs the inference based on the training loops, tweak the epochs to see improvement in performance.
  - Hyperparameters are set in config file.
+## License
+(Suggested by ChatGpt:)  
+This project is licensed under the [MIT License](LICENSE).  
+✔️ Free to use, modify, and distribute — no restrictions.
