@@ -25,6 +25,8 @@ Each module could be executed on its own to understand how it works and check it
 ## Installation
 - Python 3.x required
 - Install dependencies:
+### Setup VScode environment (optional)
+- conda env create -f colab/environment.yml
 ## Clone the repository
 
 git clone https://github.com/sunishbharat/llm-from-the-ground-up.git
