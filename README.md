@@ -1,6 +1,6 @@
 ## Table of Contents
 - [Motivation](#Motivation)
-- [Project Goals](#Project Goals)
+- [Project Goals](#Project_Goals)
 - [Installation](#installation)
 - [Usage](#Usage)
 - [Contributing](#contributing)
